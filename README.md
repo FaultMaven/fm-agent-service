@@ -1,6 +1,6 @@
 # FM Agent Service
 
-FaultMaven microservice for agent service.
+PROPRIETARY: Advanced AI Agent logic for automated investigation and root cause analysis.
 
 ## Overview
 
