@@ -1,0 +1,91 @@
+name: Generate Documentation
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        run: |
+          pip install poetry==1.7.1
+
+      - name: Install dependencies
+        run: |
+          poetry install
+
+      - name: Generate OpenAPI Specification
+        run: |
+          poetry run python -c "
+          from agent_service.main import app
+          import json
+          import yaml
+          import os
+
+          # Generate OpenAPI spec
+          spec = app.openapi()
+
+          # Create docs directory
+          os.makedirs('docs/api', exist_ok=True)
+
+          # Write JSON spec
+          with open('docs/api/openapi.json', 'w') as f:
+              json.dump(spec, f, indent=2)
+
+          # Write YAML spec
+          with open('docs/api/openapi.yaml', 'w') as f:
+              yaml.dump(spec, f, default_flow_style=False, sort_keys=False)
+
+          print('✅ OpenAPI specification generated')
+          "
+
+      - name: Check for documentation changes
+        id: check_changes
+        run: |
+          git add docs/api/*.json docs/api/*.yaml 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "📝 No documentation changes detected"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "📝 Documentation changes detected"
+            git diff --staged --stat
+          fi
+
+      - name: Commit and push documentation
+        if: |
+          github.event_name == 'push' &&
+          github.ref == 'refs/heads/main' &&
+          steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs: Auto-generate API documentation [skip ci]
+
+          - Updated OpenAPI specification (JSON + YAML)
+          - Documentation timestamp: $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload OpenAPI spec as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: openapi-spec
+          path: docs/api/
+          retention-days: 30
