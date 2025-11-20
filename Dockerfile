@@ -3,7 +3,8 @@ FROM python:3.11-slim as builder
 
 WORKDIR /app
 
-# Install poetry
+# Install git (for fm-core-lib dependency) and poetry
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 RUN pip install poetry==1.7.0
 
 # Copy dependency files
@@ -16,6 +17,9 @@ RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 FROM python:3.11-slim
 
 WORKDIR /app
+
+# Install git (needed for fm-core-lib dependency in requirements.txt)
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install
 COPY --from=builder /app/requirements.txt .
