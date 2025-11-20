@@ -17,6 +17,18 @@ opentelemetry-sdk = "^1.20.0"
 prometheus-client = "^0.18.0"
 python-json-logger = "^2.0.0"
 
+# FaultMaven Core Library
+fm-core-lib = {git = "https://github.com/FaultMaven/fm-core-lib.git", branch = "main"}
+
+# LangGraph Agent Framework
+langgraph = "^0.1.2"
+
+# LLM Observability
+opik = "^0.2.1"
+
+# Utilities
+tenacity = "^8.3.0"
+
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
