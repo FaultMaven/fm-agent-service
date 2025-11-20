@@ -61,10 +61,10 @@ async def get_milestone_engine(
     case_client: CaseServiceClient = Depends(get_case_service_client),
 ) -> MilestoneEngine:
     """Get MilestoneEngine instance with dependencies."""
-    # Phase 6.1: Real OpenAI integration (set OPENAI_API_KEY env var)
-    # TODO Phase 6.2: Add Anthropic and Fireworks fallback providers
-    from agent_service.infrastructure.llm.simple_provider import SimpleLLMProvider
-    llm_provider = SimpleLLMProvider()
+    # Phase 6.2: Multi-provider with automatic fallback
+    # Tries: OpenAI → Anthropic → Fireworks (based on available API keys)
+    from agent_service.infrastructure.llm.multi_provider import MultiProviderLLM
+    llm_provider = MultiProviderLLM()
 
     return MilestoneEngine(
         llm_provider=llm_provider,
