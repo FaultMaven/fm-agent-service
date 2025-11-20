@@ -8,6 +8,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 
+from agent_service.api.routes import agent
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -17,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 # Create FastAPI application
 app = FastAPI(
-    title="Agent Service Service",
-    description="FaultMaven AI Agent Orchestration Microservice",
-    version="0.1.0"
+    title="Agent Service",
+    description="FaultMaven AI Agent Orchestration Microservice - Milestone-based Investigation Engine",
+    version="2.0.0"
 )
 
 # Configure CORS
@@ -30,6 +32,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register routers
+app.include_router(agent.router)
 
 
 @app.get("/health")

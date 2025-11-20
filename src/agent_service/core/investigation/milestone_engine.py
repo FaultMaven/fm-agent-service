@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
-from faultmaven.models.case import (
+from fm_core_lib.models import (
     Case,
     CaseStatus,
     ConsultingData,
@@ -57,6 +57,7 @@ from faultmaven.models.case import (
     DegradedMode,
     DegradedModeType,
 )
+from fm_core_lib.clients import CaseServiceClient
 from faultmaven.models.interfaces import ILLMProvider
 
 
@@ -92,21 +93,21 @@ class MilestoneEngine:
     def __init__(
         self,
         llm_provider: ILLMProvider,
-        repository: Any,  # Case repository abstraction (duck typing)
+        case_service_client: CaseServiceClient,
         trace_enabled: bool = True
     ):
         """Initialize milestone engine.
 
         Args:
             llm_provider: LLM provider implementation (ILLMProvider interface)
-            repository: Case repository with save/get methods
+            case_service_client: HTTP client for case service communication (stateless)
             trace_enabled: Enable observability tracing
         """
         self.llm_provider = llm_provider
-        self.repository = repository
+        self.case_client = case_service_client
         self.trace_enabled = trace_enabled
 
-        logger.info("MilestoneEngine initialized with milestone-based architecture")
+        logger.info("MilestoneEngine initialized with milestone-based architecture (stateless)")
 
     async def process_turn(
         self,
@@ -203,10 +204,10 @@ class MilestoneEngine:
             # Step 9: Check automatic status transitions
             self._check_automatic_transitions(updated_case)
 
-            # Step 10: Save case
+            # Step 10: Save case via HTTP client (stateless microservice)
             updated_case.updated_at = datetime.now(timezone.utc)
             updated_case.last_activity_at = datetime.now(timezone.utc)
-            await self.repository.save(updated_case)
+            await self.case_client.update_case(case.case_id, updated_case)
 
             logger.info(
                 f"Turn {updated_case.current_turn} processed successfully. "
