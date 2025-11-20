@@ -61,9 +61,10 @@ async def get_milestone_engine(
     case_client: CaseServiceClient = Depends(get_case_service_client),
 ) -> MilestoneEngine:
     """Get MilestoneEngine instance with dependencies."""
-    # TODO Phase 6: Replace StubLLMProvider with real LLM routing (OpenAI/Anthropic/Fireworks)
-    from agent_service.infrastructure.llm.stub_provider import StubLLMProvider
-    llm_provider = StubLLMProvider()
+    # Phase 6.1: Real OpenAI integration (set OPENAI_API_KEY env var)
+    # TODO Phase 6.2: Add Anthropic and Fireworks fallback providers
+    from agent_service.infrastructure.llm.simple_provider import SimpleLLMProvider
+    llm_provider = SimpleLLMProvider()
 
     return MilestoneEngine(
         llm_provider=llm_provider,
