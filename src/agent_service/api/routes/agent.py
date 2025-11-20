@@ -61,9 +61,9 @@ async def get_milestone_engine(
     case_client: CaseServiceClient = Depends(get_case_service_client),
 ) -> MilestoneEngine:
     """Get MilestoneEngine instance with dependencies."""
-    # TODO: Initialize LLM provider from environment
-    from faultmaven.infrastructure.llm.provider import LLMProvider
-    llm_provider = LLMProvider()
+    # TODO Phase 6: Replace StubLLMProvider with real LLM routing (OpenAI/Anthropic/Fireworks)
+    from agent_service.infrastructure.llm.stub_provider import StubLLMProvider
+    llm_provider = StubLLMProvider()
 
     return MilestoneEngine(
         llm_provider=llm_provider,
