@@ -28,4 +28,3 @@ htmlcov/
 *.log
 
 # Poetry
-poetry.lock
