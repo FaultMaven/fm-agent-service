@@ -1130,7 +1130,7 @@ dev = ["black (>=23.7.0)", "mypy (>=1.5.0)", "pytest (>=7.4.0)", "pytest-asyncio
 type = "git"
 url = "https://github.com/FaultMaven/fm-core-lib.git"
 reference = "main"
-resolved_reference = "c838fd5ad43f653c114d19b3458176a064aa0981"
+resolved_reference = "572222e574273fcc092a54bb92e997a7a61990de"
 
 [[package]]
 name = "frozenlist"

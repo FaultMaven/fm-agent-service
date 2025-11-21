@@ -8,8 +8,10 @@ for different response scenarios.
 """
 
 from typing import Dict, Any, Optional
-from faultmaven.models.api import ResponseType
-from faultmaven.config.settings import get_settings
+from agent_service.models_compat import ResponseType
+
+# Temporary: get_settings not available in microservices, use env vars directly
+import os
 
 
 # Response-type-specific prompt templates

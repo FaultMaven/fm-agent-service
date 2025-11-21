@@ -58,7 +58,11 @@ from fm_core_lib.models import (
     DegradedModeType,
 )
 from fm_core_lib.clients import CaseServiceClient
-from faultmaven.models.interfaces import ILLMProvider
+from typing import Protocol
+
+class ILLMProvider(Protocol):
+    """LLM Provider interface for type hints"""
+    pass
 
 
 logger = logging.getLogger(__name__)
@@ -656,7 +660,7 @@ The investigation is complete. Focus on documentation and knowledge sharing."""
         Returns:
             UploadedFile object
         """
-        from faultmaven.models.case import UploadedFile
+        from fm_core_lib.models import UploadedFile
 
         uploaded_file = UploadedFile(
             file_id=attachment.get('file_id', f"file_{uuid4().hex[:12]}"),

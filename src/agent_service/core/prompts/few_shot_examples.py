@@ -10,8 +10,7 @@ that integrate with the intelligent prompt system.
 """
 
 from typing import List, Dict, Optional
-from faultmaven.models.api import ResponseType
-from faultmaven.models.agentic import QueryIntent
+from agent_service.models_compat import ResponseType, QueryIntent
 
 # =============================================================================
 # OPTIMIZED PATTERN TEMPLATES (Phase 3 - Token Efficiency)
