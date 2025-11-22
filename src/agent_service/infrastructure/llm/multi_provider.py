@@ -1,14 +1,20 @@
 """Multi-Provider LLM with Fallback Chain.
 
-Implements intelligent fallback logic:
-1. Try OpenAI (primary - fast, reliable)
-2. Fallback to Anthropic (secondary - high quality)
-3. Fallback to Fireworks (tertiary - open source, cheap)
+Implements intelligent fallback logic across multiple LLM providers:
+1. OpenAI (GPT-4, GPT-3.5)
+2. Anthropic (Claude)
+3. Groq (ultra-fast Llama/Mixtral)
+4. Gemini (Google)
+5. Fireworks (open source models)
+6. OpenRouter (aggregated access)
 
 Environment variables:
 - OPENAI_API_KEY, OPENAI_MODEL, OPENAI_BASE_URL
 - ANTHROPIC_API_KEY, ANTHROPIC_MODEL, ANTHROPIC_BASE_URL
+- GROQ_API_KEY, GROQ_MODEL, GROQ_BASE_URL
+- GEMINI_API_KEY, GEMINI_MODEL, GEMINI_BASE_URL
 - FIREWORKS_API_KEY, FIREWORKS_MODEL, FIREWORKS_BASE_URL
+- OPENROUTER_API_KEY, OPENROUTER_MODEL, OPENROUTER_BASE_URL
 """
 
 import logging
@@ -19,6 +25,8 @@ from .base import ProviderConfig
 from .openai_provider import OpenAIProvider
 from .anthropic_provider import AnthropicProvider
 from .fireworks_provider import FireworksProvider
+from .groq_provider import GroqProvider
+from .gemini_provider import GeminiProvider
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +34,8 @@ logger = logging.getLogger(__name__)
 class MultiProviderLLM:
     """Multi-provider LLM with automatic fallback chain.
 
-    Tries providers in order until one succeeds:
-    1. OpenAI (if configured)
-    2. Anthropic (if configured)
-    3. Fireworks (if configured)
-
-    Falls back gracefully if earlier providers fail.
+    Tries providers in order until one succeeds.
+    Providers are initialized based on available API keys.
     """
 
     def __init__(self):
@@ -107,10 +111,78 @@ class MultiProviderLLM:
                 self.provider_names.append("fireworks")
                 logger.info("✅ Fireworks provider initialized")
 
+        # Try to initialize Groq
+        groq_key = os.getenv("GROQ_API_KEY")
+        if groq_key:
+            groq_config = ProviderConfig(
+                name="groq",
+                api_key=groq_key,
+                base_url=os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1"),
+                models=[
+                    os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+                    "llama-3.1-70b-versatile",
+                    "llama-3.1-8b-instant",
+                    "mixtral-8x7b-32768"
+                ],
+                default_model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+                timeout=60,
+                confidence_score=0.88,
+            )
+            groq_provider = GroqProvider(groq_config)
+            if groq_provider.is_available():
+                self.providers.append(groq_provider)
+                self.provider_names.append("groq")
+                logger.info("✅ Groq provider initialized")
+
+        # Try to initialize Gemini
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        if gemini_key:
+            gemini_config = ProviderConfig(
+                name="gemini",
+                api_key=gemini_key,
+                base_url=os.getenv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta"),
+                models=[
+                    os.getenv("GEMINI_MODEL", "gemini-1.5-pro"),
+                    "gemini-1.5-flash",
+                    "gemini-1.0-pro"
+                ],
+                default_model=os.getenv("GEMINI_MODEL", "gemini-1.5-pro"),
+                timeout=60,
+                confidence_score=0.82,
+            )
+            gemini_provider = GeminiProvider(gemini_config)
+            if gemini_provider.is_available():
+                self.providers.append(gemini_provider)
+                self.provider_names.append("gemini")
+                logger.info("✅ Gemini provider initialized")
+
+        # Try to initialize OpenRouter (uses OpenAI-compatible API)
+        openrouter_key = os.getenv("OPENROUTER_API_KEY")
+        if openrouter_key:
+            openrouter_config = ProviderConfig(
+                name="openrouter",
+                api_key=openrouter_key,
+                base_url=os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+                models=[
+                    os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet"),
+                    "openai/gpt-4-turbo",
+                    "google/gemini-pro"
+                ],
+                default_model=os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet"),
+                timeout=60,
+                confidence_score=0.85,
+            )
+            openrouter_provider = OpenAIProvider(openrouter_config)  # OpenRouter uses OpenAI-compatible API
+            if openrouter_provider.is_available():
+                self.providers.append(openrouter_provider)
+                self.provider_names.append("openrouter")
+                logger.info("✅ OpenRouter provider initialized")
+
         if not self.providers:
             logger.warning(
-                "⚠️ No LLM providers configured! Set at least one of: "
-                "OPENAI_API_KEY, ANTHROPIC_API_KEY, or FIREWORKS_API_KEY"
+                "⚠️ No LLM providers configured! Set at least one API key: "
+                "OPENAI_API_KEY, ANTHROPIC_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, "
+                "FIREWORKS_API_KEY, or OPENROUTER_API_KEY"
             )
         else:
             logger.info(
