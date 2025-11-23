@@ -160,10 +160,13 @@ class MilestoneEngine:
             prompt = self._build_prompt(case, user_message, attachments)
 
             # Step 2: Invoke LLM with structured output
+            # Task type "chat" for main diagnostic conversations
+            # (Future: "multimodal" for images, "synthesis" for KB queries)
             llm_response_text = await self.llm_provider.generate(
                 prompt=prompt,
                 temperature=0.7,
-                max_tokens=4000
+                max_tokens=4000,
+                task_type="chat"
             )
 
             # Step 3: Parse LLM response (simple text for now, structured later)

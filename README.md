@@ -66,6 +66,55 @@ curl http://localhost:8006/health
 
 See `.env.example` for required configuration.
 
+### LLM Provider Configuration
+
+The agent service supports 6 LLM providers with automatic fallback:
+
+- **OpenAI** (GPT-4, GPT-4o, etc.)
+- **Anthropic** (Claude 3.5 Sonnet, etc.)
+- **Groq** (Llama 3.3, Mixtral - FREE tier available)
+- **Gemini** (Google's Gemini models)
+- **Fireworks** (Open source models)
+- **OpenRouter** (Multi-provider aggregator)
+
+**Basic Configuration:**
+
+```bash
+# Configure one or more providers
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+GROQ_API_KEY=gsk_...
+```
+
+**Task-Specific Provider Routing (Optional):**
+
+For cost optimization and performance, you can assign specific providers to different task types:
+
+```bash
+# Main diagnostic conversations
+CHAT_PROVIDER=openai
+CHAT_MODEL=gpt-4o
+
+# Visual evidence processing (future)
+MULTIMODAL_PROVIDER=gemini
+MULTIMODAL_MODEL=gemini-1.5-pro
+
+# Knowledge base RAG queries (future)
+SYNTHESIS_PROVIDER=groq
+SYNTHESIS_MODEL=llama-3.1-8b-instant  # Fast and FREE!
+
+# Disable fallback (fail instead of trying next provider)
+STRICT_PROVIDER_MODE=false
+```
+
+**Task Types:**
+
+- `chat` - Main diagnostic conversations (currently implemented)
+- `multimodal` - Visual evidence processing (future: image analysis)
+- `synthesis` - Knowledge base RAG queries (future: document Q&A)
+
+If task-specific providers are not configured, the service uses automatic fallback across all available providers.
+
 ## Database Schema
 
 

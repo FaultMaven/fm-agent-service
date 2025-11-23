@@ -66,6 +66,7 @@ class SimpleLLMProvider:
         temperature: float = 0.7,
         max_tokens: int = 4000,
         model: Optional[str] = None,
+        task_type: str = "chat",
         **kwargs
     ) -> str:
         """Generate text completion.
@@ -77,6 +78,7 @@ class SimpleLLMProvider:
             temperature: Sampling temperature (0.0 to 1.0)
             max_tokens: Maximum tokens to generate
             model: Optional model override
+            task_type: Type of task (ignored by SimpleLLMProvider - only uses single provider)
             **kwargs: Additional provider-specific parameters
 
         Returns:
