@@ -359,6 +359,8 @@ From `/home/swhouse/product/FaultMaven-Mono/faultmaven/infrastructure/`:
 - [x] Add structlog to dependencies
 - [x] Update poetry.lock
 - [x] Create integration tests
+- [x] **Instrument MultiProviderLLM with tracing** ✨
+- [x] **Replace standard logging with UnifiedLogger** ✨
 - [ ] Run full test suite (pending poetry environment setup)
 - [ ] Verify in running service
 - [ ] Document for other microservices
@@ -404,7 +406,14 @@ From `/home/swhouse/product/FaultMaven-Mono/faultmaven/infrastructure/`:
 
 ### Future Enhancements
 
-1. **Propagate to Other Microservices**
+1. **⚠️ API Gateway Header Forwarding** (P0 - Critical)
+   - **Issue**: API Gateway doesn't forward `X-Correlation-ID`, `X-Session-ID`, `X-Case-ID`
+   - **Impact**: Each service generates different correlation IDs → broken distributed tracing
+   - **Status**: Agent service works (has UUID fallback) but suboptimal
+   - **Action**: See [HEADER_FORWARDING_REQUIREMENTS.md](HEADER_FORWARDING_REQUIREMENTS.md) for detailed analysis
+   - **Priority**: Implement correlation ID forwarding in fm-api-gateway
+
+2. **Propagate to Other Microservices**
    - Port logging infrastructure to:
      - fm-knowledge-service
      - fm-case-service
