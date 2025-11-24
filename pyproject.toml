@@ -26,6 +26,9 @@ langgraph = "^0.1.2"
 # LLM Observability
 opik = "^0.2.1"
 
+# Structured Logging
+structlog = "^23.2.0"
+
 # Utilities
 tenacity = "^8.3.0"
 

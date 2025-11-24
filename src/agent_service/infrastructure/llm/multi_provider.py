@@ -14,11 +14,11 @@ Environment variables:
 - ANTHROPIC_API_KEY, ANTHROPIC_MODEL, ANTHROPIC_BASE_URL
 - GROQ_API_KEY, GROQ_MODEL, GROQ_BASE_URL
 - GEMINI_API_KEY, GEMINI_MODEL, GEMINI_BASE_URL
-- FIREWORKS_API_KEY, FIREWORKS_MODEL, FIREWORKS_BASE_URL
-- OPENROUTER_API_KEY, OPENROUTER_MODEL, OPENROUTER_BASE_URL
-- LOCAL_LLM_API_KEY, LOCAL_LLM_MODEL, LOCAL_LLM_URL
-
-Task-Specific Provider Routing (Optional):
+  - FIREWORKS_API_KEY, FIREWORKS_MODEL, FIREWORKS_BASE_URL
+  - OPENROUTER_API_KEY, OPENROUTER_MODEL, OPENROUTER_BASE_URL
+  - LOCAL_LLM_API_KEY, LOCAL_LLM_MODEL, LOCAL_LLM_BASE_URL
+  
+  Task-Specific Provider Routing (Optional):
 - CHAT_PROVIDER, CHAT_MODEL - Main diagnostic conversations
 - MULTIMODAL_PROVIDER, MULTIMODAL_MODEL - Visual evidence processing
 - SYNTHESIS_PROVIDER, SYNTHESIS_MODEL - Knowledge base RAG queries
@@ -210,12 +210,17 @@ class MultiProviderLLM:
             return
 
         try:
+            # Check for model override from environment, otherwise use default
+            env_model = os.getenv(f"{env_prefix}_MODEL")
+            if env_model:
+                default_model = env_model
+                
             config = ProviderConfig(
                 name=name,
                 api_key=api_key,
                 base_url=os.getenv(f"{env_prefix}_BASE_URL", default_base_url),
                 models=models,
-                default_model=os.getenv(f"{env_prefix}_MODEL", default_model),
+                default_model=default_model,
                 timeout=60,
                 confidence_score=confidence,
             )
@@ -225,7 +230,7 @@ class MultiProviderLLM:
                 self.providers.append(provider)
                 self.provider_names.append(name)
                 self.provider_map[name] = provider
-                logger.info(f"✅ {name.capitalize()} provider initialized")
+                logger.info(f"✅ {name.capitalize()} provider initialized (model: {default_model})")
         
         except Exception as e:
             logger.warning(f"Failed to initialize {name} provider: {e}")

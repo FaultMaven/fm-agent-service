@@ -6,16 +6,12 @@ FaultMaven AI Agent Orchestration Microservice
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import logging
 
 from agent_service.api.routes import agent
+from agent_service.infrastructure.logging import LoggingMiddleware, get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Configure structured logging
+logger = get_logger(__name__)
 
 # Create FastAPI application
 app = FastAPI(
@@ -23,6 +19,9 @@ app = FastAPI(
     description="FaultMaven AI Agent Orchestration Microservice - Milestone-based Investigation Engine",
     version="2.0.0"
 )
+
+# Add logging middleware (must be first to capture all requests)
+app.add_middleware(LoggingMiddleware)
 
 # Configure CORS
 app.add_middleware(
