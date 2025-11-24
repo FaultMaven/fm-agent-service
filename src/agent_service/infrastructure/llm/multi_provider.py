@@ -36,7 +36,11 @@ from .fireworks_provider import FireworksProvider
 from .groq_provider import GroqProvider
 from .gemini_provider import GeminiProvider
 
-logger = logging.getLogger(__name__)
+# Import observability components
+from agent_service.infrastructure.logging import get_logger
+from agent_service.infrastructure.observability import get_tracer
+
+logger = get_logger(__name__)
 
 
 class MultiProviderLLM:
@@ -325,13 +329,23 @@ class MultiProviderLLM:
             )
 
             try:
-                response = await task_provider.generate(
-                    prompt=prompt,
-                    model=model,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                    **kwargs
-                )
+                # Add tracing for LLM generation
+                tracer = get_tracer()
+                with tracer.trace("llm_generate", provider=provider_name, model=model, task=task_type) as span:
+                    response = await task_provider.generate(
+                        prompt=prompt,
+                        model=model,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                        **kwargs
+                    )
+                    
+                    if span:
+                        span.log({
+                            "tokens": response.tokens_used,
+                            "latency_ms": response.response_time_ms,
+                            "confidence": response.confidence
+                        })
 
                 logger.info(
                     f"✅ Success with {provider_name}: {response.model}, "
@@ -365,13 +379,23 @@ class MultiProviderLLM:
             try:
                 logger.info(f"🔄 Trying provider {i + 1}/{len(self.providers)}: {provider_name}")
 
-                response = await provider.generate(
-                    prompt=prompt,
-                    model=model,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                    **kwargs
-                )
+                # Add tracing for LLM generation (fallback chain)
+                tracer = get_tracer()
+                with tracer.trace("llm_generate", provider=provider_name, model=model, task=task_type, fallback_attempt=i+1) as span:
+                    response = await provider.generate(
+                        prompt=prompt,
+                        model=model,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                        **kwargs
+                    )
+                    
+                    if span:
+                        span.log({
+                            "tokens": response.tokens_used,
+                            "latency_ms": response.response_time_ms,
+                            "confidence": response.confidence
+                        })
 
                 logger.info(
                     f"✅ Success with {provider_name}: {response.model}, "
