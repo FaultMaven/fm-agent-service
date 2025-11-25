@@ -6,8 +6,9 @@ Implements intelligent fallback logic across multiple LLM providers:
 3. Groq (ultra-fast Llama/Mixtral)
 4. Gemini (Google)
 5. Fireworks (open source models)
-6. OpenRouter (aggregated access)
-7. Local LLM (Ollama, LM Studio, LocalAI, vLLM)
+6. HuggingFace (open source models via Inference API)
+7. OpenRouter (aggregated access)
+8. Local LLM (Ollama, LM Studio, LocalAI, vLLM)
 
 Environment variables:
 - OPENAI_API_KEY, OPENAI_MODEL, OPENAI_BASE_URL
@@ -15,6 +16,7 @@ Environment variables:
 - GROQ_API_KEY, GROQ_MODEL, GROQ_BASE_URL
 - GEMINI_API_KEY, GEMINI_MODEL, GEMINI_BASE_URL
   - FIREWORKS_API_KEY, FIREWORKS_MODEL, FIREWORKS_BASE_URL
+  - HUGGINGFACE_API_KEY, HUGGINGFACE_MODEL, HUGGINGFACE_BASE_URL
   - OPENROUTER_API_KEY, OPENROUTER_MODEL, OPENROUTER_BASE_URL
   - LOCAL_LLM_API_KEY, LOCAL_LLM_MODEL, LOCAL_LLM_BASE_URL
   
@@ -35,6 +37,7 @@ from .anthropic_provider import AnthropicProvider
 from .fireworks_provider import FireworksProvider
 from .groq_provider import GroqProvider
 from .gemini_provider import GeminiProvider
+from .huggingface_provider import HuggingFaceProvider
 
 # Import observability components
 from agent_service.infrastructure.logging import get_logger
@@ -139,6 +142,22 @@ class MultiProviderLLM:
         )
 
         self._try_init_provider(
+            name="huggingface",
+            provider_class=HuggingFaceProvider,
+            env_prefix="HUGGINGFACE",
+            default_base_url="https://api-inference.huggingface.co/models",
+            default_model="meta-llama/Llama-3.2-3B-Instruct",
+            models=[
+                "meta-llama/Llama-3.2-3B-Instruct",
+                "meta-llama/Llama-3.2-1B-Instruct",
+                "mistralai/Mistral-7B-Instruct-v0.3",
+                "microsoft/Phi-3-mini-4k-instruct",
+                "google/flan-t5-large",
+            ],
+            confidence=0.70  # Lower confidence due to smaller open-source models
+        )
+
+        self._try_init_provider(
             name="openrouter",
             provider_class=OpenAIProvider,  # OpenRouter uses OpenAI-compatible API
             env_prefix="OPENROUTER",
@@ -175,7 +194,7 @@ class MultiProviderLLM:
             logger.warning(
                 "⚠️ No LLM providers configured! Set at least one API key: "
                 "OPENAI_API_KEY, ANTHROPIC_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, "
-                "FIREWORKS_API_KEY, OPENROUTER_API_KEY, or LOCAL_LLM_API_KEY"
+                "FIREWORKS_API_KEY, HUGGINGFACE_API_KEY, OPENROUTER_API_KEY, or LOCAL_LLM_API_KEY"
             )
         else:
             logger.info(
