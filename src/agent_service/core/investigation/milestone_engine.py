@@ -56,8 +56,8 @@ from fm_core_lib.models import (
     ConfidenceLevel,
     DegradedMode,
     DegradedModeType,
-    determine_investigation_path,
 )
+from fm_core_lib.models.case import determine_investigation_path
 from fm_core_lib.clients import CaseServiceClient
 from typing import Protocol
 import json
