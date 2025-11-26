@@ -1,10 +1,10 @@
 # FM Agent Service
 
-PROPRIETARY: Advanced AI Agent logic for automated investigation and root cause analysis.
+AI-powered troubleshooting agent that performs automated root cause analysis using milestone-based investigation workflows.
 
 ## Overview
 
-Manages agent service functionality for FaultMaven.
+The Agent Service is the core AI reasoning engine of FaultMaven. It orchestrates multi-step diagnostic conversations, integrates with knowledge bases through RAG, and coordinates with other microservices (Case, Evidence, Knowledge) to guide users through systematic troubleshooting workflows.
 
 ## API Endpoints
 
