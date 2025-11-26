@@ -1,6 +1,6 @@
 # FM Agent Service
 
-AI-powered troubleshooting agent that performs automated root cause analysis using milestone-based investigation workflows.
+An AI copilot that helps you diagnose and resolve technical issues through clear, step-by-step guidance.
 
 ## Overview
 
