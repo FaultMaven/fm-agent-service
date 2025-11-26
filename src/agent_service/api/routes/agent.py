@@ -53,8 +53,10 @@ class AgentChatResponse(BaseModel):
 
 async def get_case_service_client() -> CaseServiceClient:
     """Get CaseServiceClient instance."""
-    # TODO: Get base_url from environment variable
-    return CaseServiceClient(base_url="http://fm-case-service:8003")
+    import os
+    # Use environment variable or fall back to default Docker network address
+    base_url = os.getenv("CASE_SERVICE_URL", "http://fm-case-service:8000")
+    return CaseServiceClient(base_url=base_url)
 
 
 async def get_milestone_engine(
