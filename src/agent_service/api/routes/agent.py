@@ -62,7 +62,7 @@ def get_service_token_provider() -> ServiceTokenProvider:
     global _service_token_provider
 
     if _service_token_provider is None:
-        auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://fm-auth-service:8000")
+        auth_service_url = os.getenv("FM_AUTH_SERVICE_URL", "http://fm-auth-service:8001")
         service_id = os.getenv("SERVICE_ID", "fm-agent-service")
 
         # Services this agent needs to call
@@ -90,7 +90,7 @@ def get_service_token_provider() -> ServiceTokenProvider:
 
 async def get_case_service_client() -> CaseServiceClient:
     """Get CaseServiceClient instance with service authentication."""
-    case_service_url = os.getenv("CASE_SERVICE_URL", "http://fm-case-service:8003")
+    case_service_url = os.getenv("FM_CASE_SERVICE_URL", "http://fm-case-service:8000")
     token_provider = get_service_token_provider()
 
     return CaseServiceClient(
