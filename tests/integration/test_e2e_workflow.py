@@ -16,9 +16,9 @@ import pytest
 from typing import Optional
 
 # Test configuration
-AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:8001")
-CASE_SERVICE_URL = os.getenv("CASE_SERVICE_URL", "http://localhost:8003")
-AGENT_SERVICE_URL = os.getenv("AGENT_SERVICE_URL", "http://localhost:8000")
+AUTH_SERVICE_URL = os.getenv("FM_AUTH_SERVICE_URL", "http://localhost:8001")
+CASE_SERVICE_URL = os.getenv("FM_CASE_SERVICE_URL", "http://localhost:8000")
+AGENT_SERVICE_URL = os.getenv("FM_AGENT_SERVICE_URL", "http://localhost:8000")
 
 # Test user
 TEST_USER = {
