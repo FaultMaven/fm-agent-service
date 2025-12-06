@@ -96,7 +96,7 @@ jobs:
     needs: integration-test
     if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, production]
-    environment: production
+    environment: on-prem
 
     steps:
       - name: Checkout enterprise-infra
