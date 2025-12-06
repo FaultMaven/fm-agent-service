@@ -1,6 +1,12 @@
 # FM Agent Service
 
+> **Part of [FaultMaven](https://github.com/FaultMaven/faultmaven)** —
+> The AI-Powered Troubleshooting Copilot
+
 An AI copilot that helps you diagnose and resolve technical issues through clear, step-by-step guidance.
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/faultmaven/fm-agent-service)
 
 ## Overview
 
@@ -126,3 +132,24 @@ See `SERVICE_EXTRACTION_MAP.md` for event specifications.
 ## Events Consumed
 
 See `SERVICE_EXTRACTION_MAP.md` for event subscriptions.
+
+## Contributing
+
+See our [Contributing Guide](https://github.com/FaultMaven/.github/blob/main/CONTRIBUTING.md) for detailed guidelines.
+
+## Support
+
+- **Discussions:** [GitHub Discussions](https://github.com/FaultMaven/faultmaven/discussions)
+- **Issues:** [GitHub Issues](https://github.com/FaultMaven/fm-agent-service/issues)
+
+## Related Projects
+
+- **[faultmaven](https://github.com/FaultMaven/faultmaven)** - Main repository and documentation
+- **[faultmaven-deploy](https://github.com/FaultMaven/faultmaven-deploy)** - Deployment configurations
+- **[fm-case-service](https://github.com/FaultMaven/fm-case-service)** - Case management service
+- **[fm-knowledge-service](https://github.com/FaultMaven/fm-knowledge-service)** - Knowledge base service
+- **[fm-evidence-service](https://github.com/FaultMaven/fm-evidence-service)** - Evidence management service
+
+## License
+
+Apache 2.0 - See [LICENSE](LICENSE) for details.
