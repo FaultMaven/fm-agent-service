@@ -1,0 +1,194 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  SERVICE_NAME: fm-agent-service
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/faultmaven/fm-agent-service
+
+jobs:
+  # ============================================================================
+  # Stage 1: Build & Publish
+  # ============================================================================
+  build:
+    name: Build and Push Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.image-tag.outputs.tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Set image tag output
+        id: image-tag
+        run: echo "tag=sha-${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Build summary
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "### ✅ Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image**: \`${{ env.IMAGE_NAME }}:sha-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Next: Integration testing with Docker Compose stack" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # Stage 2: Integration Test (Public Quality Gate)
+  # ============================================================================
+  integration-test:
+    name: Integration Test
+    needs: build
+    if: github.event_name != 'pull_request'
+    uses: FaultMaven/faultmaven-deploy/.github/workflows/integration-test.yml@main
+    with:
+      service_name: fm-agent-service
+      image_tag: sha-${{ github.sha }}
+    secrets: inherit
+
+  # ============================================================================
+  # Stage 3: Production Deployment
+  # ============================================================================
+  deploy:
+    name: Deploy to Production
+    needs: integration-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, production]
+    environment: production
+
+    steps:
+      - name: Checkout enterprise-infra
+        uses: actions/checkout@v4
+        with:
+          repository: FaultMaven/faultmaven-enterprise-infra
+          token: ${{ secrets.INFRA_REPO_PAT }}
+          path: infra
+
+      - name: Update image tag in K8s manifest
+        run: |
+          cd infra/kubernetes/apps/faultmaven/base/${{ env.SERVICE_NAME }}
+
+          echo "Current kustomization:"
+          cat kustomization.yaml
+
+          echo ""
+          echo "Updating image to: ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}"
+
+          kustomize edit set image \
+            ${{ env.IMAGE_NAME }}=${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+
+          echo ""
+          echo "Updated kustomization:"
+          cat kustomization.yaml
+
+      - name: Deploy to Kubernetes
+        run: |
+          cd infra/kubernetes/apps/faultmaven/base/${{ env.SERVICE_NAME }}
+
+          echo "Applying manifests to cluster..."
+          kubectl apply -k .
+
+          echo ""
+          echo "Waiting for rollout to complete..."
+          kubectl rollout status deployment/${{ env.SERVICE_NAME }} -n faultmaven --timeout=300s
+
+      - name: Verify deployment
+        run: |
+          echo "Deployment status:"
+          kubectl get deployment ${{ env.SERVICE_NAME }} -n faultmaven
+
+          echo ""
+          echo "Pod status:"
+          kubectl get pods -n faultmaven -l app=${{ env.SERVICE_NAME }}
+
+          echo ""
+          echo "Service status:"
+          kubectl get service ${{ env.SERVICE_NAME }} -n faultmaven
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "### ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Service**: ${{ env.SERVICE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image**: \`${{ env.IMAGE_NAME }}:sha-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Namespace**: faultmaven" >> $GITHUB_STEP_SUMMARY
+          echo "**Cluster**: production (192.168.0.100:6443)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Deployment is live and healthy!" >> $GITHUB_STEP_SUMMARY
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed, initiating rollback..."
+          kubectl rollout undo deployment/${{ env.SERVICE_NAME }} -n faultmaven
+          kubectl rollout status deployment/${{ env.SERVICE_NAME }} -n faultmaven --timeout=300s
+
+          echo "Rollback complete. Previous version restored."
+
+          echo "### ❌ Deployment Failed - Rolled Back" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The deployment failed and has been rolled back to the previous version." >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # Pipeline Summary
+  # ============================================================================
+  summary:
+    name: Pipeline Summary
+    needs: [build, integration-test, deploy]
+    if: always() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pipeline summary
+        run: |
+          echo "### 📊 CI/CD Pipeline Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Build & Push | ${{ needs.build.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration Test | ${{ needs.integration-test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Production Deploy | ${{ needs.deploy.result == 'success' && '✅ Passed' || needs.deploy.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
