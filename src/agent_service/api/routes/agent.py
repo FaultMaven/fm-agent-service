@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field
 
 from fm_core_lib.models import Case
 from fm_core_lib.clients import CaseServiceClient
-from fm_core_lib.auth import ServiceTokenProvider
 from agent_service.core.investigation.milestone_engine import MilestoneEngine
 
 logger = logging.getLogger(__name__)
@@ -53,50 +52,10 @@ class AgentChatResponse(BaseModel):
 # Dependencies
 # ============================================================================
 
-# Global service token provider (singleton)
-_service_token_provider: Optional[ServiceTokenProvider] = None
-
-
-def get_service_token_provider() -> ServiceTokenProvider:
-    """Get or create service token provider singleton."""
-    global _service_token_provider
-
-    if _service_token_provider is None:
-        auth_service_url = os.getenv("FM_AUTH_SERVICE_URL", "http://fm-auth-service:8001")
-        service_id = os.getenv("SERVICE_ID", "fm-agent-service")
-
-        # Services this agent needs to call
-        audience = [
-            "fm-case-service",
-            "fm-knowledge-service",
-            "fm-evidence-service",
-            "fm-session-service",
-            "fm-investigation-service",
-        ]
-
-        _service_token_provider = ServiceTokenProvider(
-            auth_service_url=auth_service_url,
-            service_id=service_id,
-            audience=audience,
-        )
-
-        logger.info(
-            f"Initialized ServiceTokenProvider: service_id={service_id}, "
-            f"auth_url={auth_service_url}"
-        )
-
-    return _service_token_provider
-
-
 async def get_case_service_client() -> CaseServiceClient:
-    """Get CaseServiceClient instance with service authentication."""
+    """Get CaseServiceClient instance."""
     case_service_url = os.getenv("FM_CASE_SERVICE_URL", "http://fm-case-service:8000")
-    token_provider = get_service_token_provider()
-
-    return CaseServiceClient(
-        base_url=case_service_url,
-        token_provider=token_provider.get_token,
-    )
+    return CaseServiceClient(base_url=case_service_url)
 
 
 async def get_milestone_engine(
