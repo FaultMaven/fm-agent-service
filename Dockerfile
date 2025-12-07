@@ -8,8 +8,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /
 RUN pip install --no-cache-dir poetry==1.7.0
 
 # Copy dependency files and install
-COPY pyproject.toml poetry.lock ./
-RUN poetry config virtualenvs.create false && poetry install --no-dev --no-interaction --no-ansi
+COPY pyproject.toml ./
+RUN poetry config virtualenvs.create false && poetry install --no-dev --no-interaction --no-ansi --no-root
 
 # Copy source code
 COPY src/ ./src/

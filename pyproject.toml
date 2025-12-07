@@ -19,6 +19,8 @@ python-json-logger = "^2.0.0"
 
 # FaultMaven Core Library
 fm-core-lib = {git = "https://github.com/FaultMaven/fm-core-lib.git", branch = "main"}
+pyjwt = ">=2.8.0"
+cryptography = ">=41.0.0"
 
 # LangGraph Agent Framework
 langgraph = "^0.1.2"
