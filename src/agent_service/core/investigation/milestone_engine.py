@@ -237,7 +237,7 @@ class MilestoneEngine:
             # Step 10: Save case via HTTP client (stateless microservice)
             updated_case.updated_at = datetime.now(timezone.utc)
             updated_case.last_activity_at = datetime.now(timezone.utc)
-            await self.case_client.update_case(case.case_id, updated_case)
+            await self.case_client.update_case(case.case_id, updated_case, user_id=case.user_id)
 
             logger.info(
                 f"Turn {updated_case.current_turn} processed successfully. "
