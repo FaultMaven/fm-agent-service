@@ -3,16 +3,19 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install git (for fm-core-lib dependency) and poetry
-RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+# Install poetry
 RUN pip install --no-cache-dir poetry==1.7.0
 
+# Copy fm-core-lib first (required dependency)
+COPY fm-core-lib/ ./fm-core-lib/
+RUN pip install --no-cache-dir ./fm-core-lib
+
 # Copy dependency files and install
-COPY pyproject.toml ./
+COPY fm-agent-service/pyproject.toml ./
 RUN poetry config virtualenvs.create false && poetry install --no-dev --no-interaction --no-ansi --no-root
 
 # Copy source code
-COPY src/ ./src/
+COPY fm-agent-service/src/ ./src/
 
 # Expose port
 EXPOSE 8000

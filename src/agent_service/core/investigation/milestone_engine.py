@@ -186,8 +186,9 @@ class MilestoneEngine:
             )
 
             # Step 4: Extract response text and tool calls
-            llm_response_text = llm_response.content
-            tool_calls = llm_response.tool_calls if hasattr(llm_response, 'tool_calls') else None
+            # Note: llm_response is a string directly, not an object with .content
+            llm_response_text = llm_response
+            tool_calls = None  # Tool calls handling would need separate implementation
 
             # Step 5: Process response and update state
             updated_case, turn_metadata = await self._process_response(
