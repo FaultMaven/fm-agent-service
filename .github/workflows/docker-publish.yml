@@ -6,9 +6,21 @@ on:
       - main
     tags:
       - 'v*.*.*'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.dockerignore'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.dockerignore'
 
 env:
   DOCKER_IMAGE: faultmaven/fm-agent-service
