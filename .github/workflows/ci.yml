@@ -91,8 +91,15 @@ jobs:
 
       - name: Run tests
         run: |
-          # TODO: Strengthen test coverage; smoke is the primary gate today
-          pytest --maxfail=1 --disable-warnings -q || true
+          # pytest exit code 5 == "no tests collected" (acceptable for now; smoke is the gate)
+          set +e
+          pytest --maxfail=1 --disable-warnings -q
+          code=$?
+          if [ "$code" -eq 5 ]; then
+            echo "No tests collected; smoke test is the primary gate for now."
+            exit 0
+          fi
+          exit "$code"
 
   smoke:
     name: Smoke test
@@ -118,16 +125,27 @@ jobs:
           docker run -d --rm --name smoke-${{ github.sha }} --network smoke-net -p 8006:8006 \
             ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
+          passed=false
           for i in {1..30}; do
             if curl -sf http://localhost:8006/health; then
               echo "✓ Health check passed"
+              passed=true
               break
             fi
             sleep 2
           done
 
+          if [ "$passed" != "true" ]; then
+            echo "✗ Health check failed"
+            docker logs smoke-${{ github.sha }} || true
+          fi
+
           docker stop smoke-${{ github.sha }}
           docker network rm smoke-net
+
+          if [ "$passed" != "true" ]; then
+            exit 1
+          fi
 
   push-to-registry:
     name: Push image to GHCR
@@ -209,22 +227,3 @@ jobs:
           kubectl rollout undo deployment/${{ env.SERVICE_NAME }} -n faultmaven
           kubectl rollout status deployment/${{ env.SERVICE_NAME }} -n faultmaven --timeout=300s
 
-  # ============================================================================
-  # Pipeline Summary
-  # ============================================================================
-  summary:
-    name: Pipeline Summary
-    needs: [build, integration-test, deploy]
-    if: always() && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Pipeline summary
-        run: |
-          echo "### 📊 CI/CD Pipeline Complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Build & Push | ${{ needs.build.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Integration Test | ${{ needs.integration-test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Production Deploy | ${{ needs.deploy.result == 'success' && '✅ Passed' || needs.deploy.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
