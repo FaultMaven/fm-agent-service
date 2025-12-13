@@ -1097,12 +1097,12 @@ pyflakes = ">=3.1.0,<3.2.0"
 
 [[package]]
 name = "fm-core-lib"
-version = "0.2.0"
+version = "0.3.0"
 description = "FaultMaven Core Library - Shared models, LLM infrastructure, and preprocessing logic"
 optional = false
 python-versions = ">=3.11"
 files = []
-develop = false
+develop = true
 
 [package.dependencies]
 anthropic = ">=0.25.0"
@@ -1118,6 +1118,7 @@ pandas = ">=1.5.0"
 pydantic = ">=2.6,<2.10"
 pydantic-settings = ">=2.3.0"
 python-dotenv = ">=1.0.1"
+redis = ">=5.0.0"
 requests = ">=2.31.0"
 tenacity = ">=8.3.0"
 tiktoken = ">=0.5.0"
@@ -1127,10 +1128,8 @@ typing-extensions = ">=4.12.2"
 dev = ["black (>=23.7.0)", "mypy (>=1.5.0)", "pytest (>=7.4.0)", "pytest-asyncio (>=0.21.0)", "pytest-cov (>=4.1.0)", "ruff (>=0.0.285)"]
 
 [package.source]
-type = "git"
-url = "https://github.com/FaultMaven/fm-core-lib.git"
-reference = "main"
-resolved_reference = "572222e574273fcc092a54bb92e997a7a61990de"
+type = "directory"
+url = "../fm-core-lib"
 
 [[package]]
 name = "frozenlist"
@@ -4969,4 +4968,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "0d3704dd66dd2b4376cd3c58abca8ad108670be0f3eac2778ccb5f1dffae5685"
+content-hash = "224116a8b8716921f51e5d7f11c811776bb37ced2c9d1f05cd3847ec34b6863c"
