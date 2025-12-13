@@ -3,6 +3,8 @@ name = "fm-agent-service"
 version = "0.1.0"
 description = "FaultMaven AI Agent Orchestration Microservice"
 authors = ["FaultMaven Team"]
+readme = "README.md"
+packages = [{include = "agent_service", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -18,7 +20,7 @@ prometheus-client = "^0.18.0"
 python-json-logger = "^2.0.0"
 
 # FaultMaven Core Library
-fm-core-lib = "*"
+fm-core-lib = {path = "fm-core-lib", develop = true}
 
 # LangGraph Agent Framework
 langgraph = "^0.1.2"
