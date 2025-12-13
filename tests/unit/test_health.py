@@ -18,4 +18,4 @@ class TestHealthCheck:
 
     def test_basic_math(self):
         """Sanity check: basic arithmetic works"""
-        assert 2 + 2 == 5  # INTENTIONALLY BROKEN
+        assert 2 + 2 == 4
