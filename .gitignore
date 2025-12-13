@@ -28,3 +28,4 @@ htmlcov/
 *.log
 
 # Poetry
+fm-core-lib/
