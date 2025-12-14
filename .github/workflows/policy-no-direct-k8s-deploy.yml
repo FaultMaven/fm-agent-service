@@ -1,0 +1,44 @@
+name: Policy - No Direct K8s Deploy
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  no-direct-k8s-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Block direct K8s deploy logic in service repo workflows
+        run: |
+          set -euo pipefail
+
+          WORKFLOW_DIR=".github/workflows"
+          echo "Scanning workflows under ${WORKFLOW_DIR}..."
+
+          # Disallow direct kubectl/kustomize/self-hosted deploy logic in service repos.
+          PATTERN='(kubectl[[:space:]]|kustomize[[:space:]]|runs-on:[[:space:]]*\\[self-hosted|faultmaven-enterprise-infra)'
+
+          # Exclude this policy file itself.
+          FILES=$(ls -1 ${WORKFLOW_DIR}/*.yml ${WORKFLOW_DIR}/*.yaml 2>/dev/null | grep -v "policy-no-direct-k8s-deploy")
+
+          MATCHED=false
+          for f in $FILES; do
+            if grep -nE "$PATTERN" "$f" >/dev/null; then
+              echo "::error file=$f::Direct deploy logic detected. Service repos must not deploy to Kubernetes."
+              echo "Matches:"
+              grep -nE "$PATTERN" "$f" || true
+              echo ""
+              MATCHED=true
+            fi
+          done
+
+          if [ "$MATCHED" = "true" ]; then
+            echo "Policy violation: remove kubectl/kustomize/self-hosted deploy logic from service repo workflows."
+            exit 1
+          fi
+
+          echo "OK: no direct deploy logic detected."
+
