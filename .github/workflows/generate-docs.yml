@@ -47,8 +47,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install
+          # Install fm-core-lib from GitHub (required by agent_service imports)
+          poetry run pip install git+https://github.com/FaultMaven/fm-core-lib.git@main
+          # Install service dependencies
+          poetry install --no-root
           poetry run pip install pyyaml
+          # Install package in development mode
+          poetry install
 
       - name: Generate OpenAPI Specification
         run: |
@@ -216,7 +221,7 @@ jobs:
           reviewers: ${{ github.actor }}
 
       - name: Upload OpenAPI spec as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: openapi-spec
           path: docs/api/
