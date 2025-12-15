@@ -23,10 +23,10 @@ python-json-logger = "^2.0.0"
 fm-core-lib = {path = "fm-core-lib", develop = true}
 
 # LangGraph Agent Framework
-langgraph = "^0.1.2"
+langgraph = "^1.0.0"
 
 # LLM Observability
-opik = "^0.2.1"
+opik = "^1.9.0"
 
 # Structured Logging
 structlog = "^23.2.0"

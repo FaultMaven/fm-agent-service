@@ -6,7 +6,7 @@ Tests the complete logging stack: RequestContext, UnifiedLogger, and middleware.
 
 import pytest
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
 
 from agent_service.infrastructure.logging import (
     RequestContext,
@@ -136,7 +136,8 @@ async def test_unified_logger_operation_context():
     coordinator.end_request()
 
 
-def test_logging_middleware_integration():
+@pytest.mark.asyncio
+async def test_logging_middleware_integration():
     """Test LoggingMiddleware with FastAPI application."""
     # Create minimal FastAPI app
     app = FastAPI()
@@ -152,28 +153,27 @@ def test_logging_middleware_integration():
             "session_id": ctx.session_id
         }
 
-    # Create test client
-    client = TestClient(app)
+    # Create test client with AsyncClient
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Make request with custom headers
+        response = await client.get(
+            "/test",
+            headers={
+                "X-Session-ID": "test-session-123",
+                "X-User-ID": "test-user-456",
+                "X-Correlation-ID": "test-correlation-789"
+            }
+        )
 
-    # Make request with custom headers
-    response = client.get(
-        "/test",
-        headers={
-            "X-Session-ID": "test-session-123",
-            "X-User-ID": "test-user-456",
-            "X-Correlation-ID": "test-correlation-789"
-        }
-    )
+        # Verify response
+        assert response.status_code == 200
+        data = response.json()
+        assert data["correlation_id"] == "test-correlation-789"
+        assert data["session_id"] == "test-session-123"
 
-    # Verify response
-    assert response.status_code == 200
-    data = response.json()
-    assert data["correlation_id"] == "test-correlation-789"
-    assert data["session_id"] == "test-session-123"
-
-    # Verify correlation ID is in response headers
-    assert "X-Correlation-ID" in response.headers
-    assert response.headers["X-Correlation-ID"] == "test-correlation-789"
+        # Verify correlation ID is in response headers
+        assert "X-Correlation-ID" in response.headers
+        assert response.headers["X-Correlation-ID"] == "test-correlation-789"
 
 
 def test_performance_tracker():
