@@ -8,6 +8,7 @@ on:
       - 'src/**/models/**'           # Pydantic models
       - 'src/**/main.py'             # App entry point
       - 'scripts/generate_readme.py' # README generator
+      - 'README_TEMPLATE.md'         # README template (human-editable)
       - 'pyproject.toml'             # Version changes
   pull_request:
     branches: [main]
@@ -16,6 +17,7 @@ on:
       - 'src/**/models/**'
       - 'src/**/main.py'
       - 'scripts/generate_readme.py'
+      - 'README_TEMPLATE.md'         # README template (human-editable)
       - 'pyproject.toml'
   workflow_dispatch:  # Allow manual trigger for initial setup or debugging
 
